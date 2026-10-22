@@ -1,0 +1,119 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FX 镜头与 3D 演示</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script src="fx.js"></script>
+<script src="fx-cam.js"></script>
+<script>
+// fx-cam.js 每个手法一段。window.seek(t) 是 t 的纯函数
+const X = document.getElementById('c').getContext('2d'), W = 1080, H = 1920;
+const { C, E, seg, lerp, clamp } = FX;
+const GOLD = '255,196,110', CYAN = '110,210,255', WHITE = '235,240,255';
+
+function city(color) {   // 简单的楼群场景，给推入 / 扫色 / 分屏用
+  const g = X.createLinearGradient(0, 0, 0, H); g.addColorStop(0, color ? '#F3B37A' : '#9a9a9a'); g.addColorStop(1, color ? '#5B7BC4' : '#555');
+  X.fillStyle = g; X.fillRect(0, 0, W, H);
+  const r = FX.rng(21);
+  for (let i = 0; i < 9; i++) {
+    const bw = 100 + r() * 80, bx = i * 125 - 20, bh = 500 + r() * 700;
+    X.fillStyle = color ? ['#2E3A66', '#45345E', '#2F4F5E'][i % 3] : '#3a3a3a'; X.fillRect(bx, H - bh, bw, bh);
+    X.fillStyle = color ? 'rgba(255,214,120,.85)' : 'rgba(220,220,220,.5)';
+    for (let y = H - bh + 30; y < H - 40; y += 60) for (let x = bx + 16; x < bx + bw - 24; x += 34) if (r() < .55) X.fillRect(x, y, 16, 26);
+  }
+}
+function room(i) {       // 分屏里的一格：不同颜色的房间 + 一个小人
+  X.fillStyle = ['#E9DCC4', '#DCE4D6', '#E2D6E6'][i]; X.fillRect(0, 0, W, H);
+  X.fillStyle = '#A57B52'; X.fillRect(0, H * .62, W, H * .38);
+  X.fillStyle = '#5a4636'; X.beginPath(); X.arc(W / 2, H * .55, 60, 0, 7); X.fill(); X.fillRect(W / 2 - 50, H * .58, 100, 160);
+  FX.text(X, ['大哭', '没哭', '找妈妈'][i], W / 2, H * .3, 110, '#5a4636', { weight: 800 });
+}
+
+const SEGS = [
+  ['ptsHuman + grid3d + morph', '粒子人 · 线框地面 · 镜头绕转 · 合体', 6.5, t => {
+    const cam = { yaw: lerp(-.55, .45, E.io(seg(t, 0, 6.5))), pitch: .42, dist: 7, fov: 950, ty: -.2 };
+    FX.grid3d(X, cam, { y: -1.25 });
+    const A = FX.shift(FX.ptsHuman(1400, { seed: 1 }), -.9, 0, 0, 2.5), B = FX.shift(FX.ptsHuman(1400, { seed: 2 }), .9, 0, 0, 2.5), M = FX.shift(FX.ptsHuman(1400, { seed: 3 }), 0, 0, 0, 2.6);
+    const k = seg(t, 3.6, 5.4);
+    FX.cloud(X, FX.morph(A, M, k), cam, { color: k > .6 ? WHITE : GOLD });
+    FX.cloud(X, FX.morph(B, M, k), cam, { color: k > .6 ? WHITE : CYAN });
+    FX.odometer(X, t, .4, 3, 61, 99, 860, 420, { size: 90, font: FX.SANS, weight: 300, suffix: '%' });
+    FX.blurIn(X, t, .5, '熟悉得让人头皮发麻？', W / 2, 1600, { size: 54, color: C.goldHi });
+  }],
+  ['morph + 镜头俯仰', '粒子重组：字 → 尘埃 → 星系，斜视转俯视', 7, t => {
+    const cam = { yaw: t * .12, pitch: lerp(.18, 1.25, E.io(seg(t, 3.5, 6.2))), dist: lerp(6, 7.5, E.io(seg(t, 3.5, 6.2))), fov: 900 };
+    FX.grid3d(X, cam, { y: -1.25, alpha: lerp(.45, .1, seg(t, 3.5, 5)) });
+    const word = FX.shift(FX.ptsText('家', 2600, { seed: 4 }), 0, 0, 0, 2.6), dust = FX.ptsDust(2600), gal = FX.ptsGalaxy(2600);
+    const p = t < 3.2 ? FX.morph(word, dust, seg(t, 1.2, 3.2), { lift: .3 }) : FX.morph(dust, gal, seg(t, 3.4, 5.6), { lift: .9 });
+    FX.cloud(X, p, cam, { color: i => i % 4 ? GOLD : CYAN });
+    FX.blurIn(X, t, .3, '你住的房子，', W / 2, 1600, { size: 52, t1: 2.8 });
+    FX.blurIn(X, t, 4.2, '都会以一模一样的排列，再次出现', W / 2, 1600, { size: 46 });
+  }],
+  ['warp + flash', '星空跃迁 · 白闪 · 粒子聚成字', 4.5, t => {
+    FX.warp(X, t, 0, 1.7);
+    FX.flash(X, t, 1.7);
+    const cam = { yaw: 0, pitch: 0, dist: 6, fov: 900 };
+    if (t > 1.7) {
+      const from = FX.ptsSphere(2200, { r: 3.6 }), to = FX.shift(FX.ptsText('重放', 2200, { seed: 6, res: 300 }), 0, .2, 0, 2.4);
+      FX.cloud(X, FX.morph(from, to, seg(t, 1.7, 3.2), { spread: .3, lift: 0 }), cam, { color: i => i % 5 ? GOLD : CYAN, size: 3 });
+      FX.blurIn(X, t, 3, '宇宙会原样再放一遍', W / 2, 1400, { size: 50 });
+    }
+  }],
+  ['camFollow + camKeys', '跟拍发光点 → 猛拉远揭示全网', 6, t => {
+    const trunk = [[540, 1700], [520, 1400], [600, 1150], [540, 900], [580, 650], [540, 380]];
+    const P = FX.path(trunk), d = P.len * E.io(seg(t, .2, 3.4));
+    const follow = FX.camFollow(P, d, { zoom: 2.4, lag: 60 }), wide = { x: 540, y: 960, zoom: .55 };
+    const cam = t < 3.6 ? follow : FX.camKeys(t, [[3.6, follow], [5, wide]]);
+    X.save(); FX.applyCam(X, cam);
+    const r = FX.rng(31);   // 揭示用：周围几十条别人的线
+    for (let i = 0; i < 46; i++) {
+      const x0 = -900 + r() * 2900, y0 = -500 + r() * 2900, pts = [[x0, y0]];
+      for (let j = 0; j < 4; j++) pts.push([pts[j][0] + (r() - .5) * 420, pts[j][1] - 200 - r() * 200]);
+      FX.grow(X, t, 3.4 + r() * .8, .9, pts, { width: 4, glow: 6, alpha: .45, head: false });
+    }
+    FX.grow(X, t, .2, 3.2, trunk, { width: 5 });
+    X.restore();
+    FX.blurIn(X, t, .4, '你以为只有这一条路', W / 2, 1650, { size: 52, t1: 3.4 });
+    FX.blurIn(X, t, 4.4, '其实是一整张网', W / 2, 1650, { size: 60, color: C.goldHi });
+  }],
+  ['nest + colorSweep', '画中画推入：纸上的楼 → 推进去 → 灰变彩', 6.5, t => {
+    const page = { x: 250, y: 620, w: 580, h: 1030 };
+    const outer = () => {
+      X.fillStyle = '#3A2A1E'; X.fillRect(-2000, -2000, 6000, 6000);
+      X.fillStyle = '#F2EAD8'; X.save(); X.shadowColor = 'rgba(0,0,0,.5)'; X.shadowBlur = 40; X.fillRect(page.x - 30, page.y - 40, page.w + 60, page.h + 80); X.restore();
+      X.save(); X.beginPath(); X.rect(page.x, page.y, page.w, page.h); X.clip(); X.translate(page.x, page.y); X.scale(page.w / W, page.h / H); city(false); X.restore();
+      X.fillStyle = '#E4B85A'; X.save(); X.translate(880, 600); X.rotate(.5); X.fillRect(0, 0, 26, 420); X.restore();
+      FX.text(X, '手账 · 第 12 页', page.x, page.y - 60, 30, '#E9DCC4', { align: 'left', font: FX.SERIF });
+    };
+    const k = E.io(seg(t, .8, 2.6));
+    if (t < 2.9) FX.nest(X, k, page, outer, () => city(false));
+    else FX.colorSweep(X, seg(t, 3.3, 5), () => { city(false); FX.desat(X, 1); }, () => city(true));
+    FX.blurIn(X, t, 3.6, '光', W / 2, 980, { size: 260, color: '#fff', weight: 900 });
+  }],
+  ['panels', '分屏 ↔ 单格：推进一格，再拉回', 5.5, t => {
+    X.fillStyle = '#1b1712'; X.fillRect(0, 0, W, H);
+    const k = t < 3.2 ? seg(t, 1.4, 2.4) : 1 - seg(t, 3.8, 4.8);
+    FX.panels(X, k, [() => room(0), () => room(1), () => room(2)], { focus: 1 });
+    FX.blurIn(X, t, .3, '心理学家观察过一群一岁的孩子', W / 2, 1600, { size: 44, t1: 1.3 });
+  }],
+  ['tint + desat', '调色叙事：夜 → 天亮，再褪成灰', 5, t => {
+    city(true);
+    FX.tint(X, '#1E2E6E', 1 - E.io(seg(t, .6, 2.2)), 'multiply');
+    FX.desat(X, E.io(seg(t, 3, 4)));
+    FX.blurIn(X, t, .3, '天一亮，就干了', W / 2, 700, { size: 64, color: '#fff', t1: 2.6 });
+    FX.blurIn(X, t, 3.1, '在最灰暗的日子', W / 2, 700, { size: 64, color: '#fff' });
+  }],
+];
+const STARTS = []; let acc = 0; SEGS.forEach(s => { STARTS.push(acc); acc += s[2]; });
+window.VIDEO = { w: W, h: H, duration: acc };
+window.seek = t => {
+  let i = SEGS.length - 1; while (i > 0 && t < STARTS[i]) i--;
+  const [name, cn, , fn] = SEGS[i], lt = t - STARTS[i];
+  X.save(); X.globalAlpha = 1; X.filter = 'none'; FX.bg(X, t, { bokeh: 0 }); X.restore();
+  X.save(); fn(lt); X.restore();
+  FX.grainAndVignette(X, t);
+  FX.text(X, `CAM ${String(i + 1).padStart(2, '0')} / ${SEGS.length}`, 70, 120, 24, C.gold, { font: FX.MONO, weight: 600, align: 'left', spacing: 3 });
+  FX.text(X, `${cn}`, 70, 160, 30, C.cream, { font: FX.SANS, weight: 600, align: 'left' });
+  FX.text(X, `${name}()`, 70, 196, 22, C.dim, { font: FX.MONO, weight: 500, align: 'left' });
+};
+</script>
+<script src="play.js"></script></body></html>

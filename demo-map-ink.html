@@ -1,0 +1,69 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FX 地形与水墨演示</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script src="fx.js"></script>
+<script src="fx-cam.js"></script>
+<script src="fx-map.js"></script>
+<script src="fx-ink.js"></script>
+<script>
+// fx-map.js / fx-ink.js 演示，window.seek(t) 是 t 的纯函数
+const X = document.getElementById('c').getContext('2d'), W = 1080, H = 1920;
+const { C, E, seg, lerp } = FX;
+
+const ROUTE = [[260, 420], [420, 760], [380, 1120], [700, 1420], [900, 1800], [1180, 2150]];
+const SEGS = [
+  ['terrain + camKeys + pulses', '晕渲地形 · 镜头沿驿路平移推近 · 光点传信', 7, t => {
+    const cam = FX.camKeys(t, [[0, { x: 700, y: 1300, zoom: .78 }], [2.2, { x: 700, y: 1300, zoom: .78 }], [5.6, { x: 950, y: 1720, zoom: 1.15 }]]);
+    X.save(); FX.applyCam(X, cam);
+    FX.terrain(X, { w: 1600, h: 2600, seed: 7, palette: 'sepia', scale: 2.2, ridge: .8, relief: 7 });
+    FX.grow(X, t, .3, 1.6, ROUTE, { width: 3, glow: 8, head: false, alpha: .55 });
+    FX.place(X, t, .4, 260, 420, '边境', { size: 40 });
+    FX.place(X, t, 1.2, 1180, 2150, '长安', { size: 48, ring: false });
+    FX.pulses(X, t, 2.2, ROUTE, { n: 3, gap: .22, dur: 3.2 });
+    X.restore();
+    FX.grainAndVignette(X, t);
+    FX.keyMark(X, t, .6, '一把火，从边境传到长安', '长安', W / 2, 1720, { size: 54, align: 'center', keyColor: C.goldHi });
+  }],
+  ['terrain(night, contour)', '夜色地形 · 等高线 · 慢推', 4.5, t => {
+    const z = lerp(.75, 1.05, E.io(seg(t, 0, 4.5)));
+    X.save(); FX.applyCam(X, { x: 800, y: 1300, zoom: z });
+    FX.terrain(X, { w: 1600, h: 2600, seed: 12, palette: 'night', contour: 7, water: .34, scale: 2, ridge: .7 });
+    FX.place(X, t, .6, 820, 1260, '大本营', { size: 40, color: '#DDE8FF', dot: '#9CC8FF', ring: true });
+    X.restore();
+    FX.grainAndVignette(X, t);
+  }],
+  ['paper + mountains + redSun', '宣纸 · 远近山层层淡出 · 视差横移 · 朱红日', 5.5, t => {
+    FX.paper(X);
+    FX.redSun(X, t, .3, 760, 560, 95);
+    FX.mountains(X, t, { n: 4, top: 760, gap: 210, drift: 16 });
+    FX.blurIn(X, t, 1.2, '顺着它走，就不费力', W / 2, 1720, { size: 56, color: '#2a2622', from: '#e9dfc9' });
+  }],
+  ['brush + inkDrop', '毛笔笔触（起笔重、收笔尖、飞白）· 墨滴晕开', 5, t => {
+    FX.paper(X);
+    FX.brush(X, t, .3, 1.1, [[170, 760], [520, 720], [910, 770]], { width: 70, seed: 3 });
+    FX.brush(X, t, 1.5, 1.2, [[640, 900], [560, 1150], [380, 1360], [220, 1450]], { width: 58, seed: 9 });
+    FX.inkDrop(X, t, 2.9, 760, 1300, { r: 120 });
+    FX.blurIn(X, t, 3.3, '水最软', W / 2, 1720, { size: 60, color: '#2a2622', from: '#e9dfc9' });
+  }],
+  ['brushChar + seal', '书法大字写出来 · 溅墨 · 朱印', 4.5, t => {
+    FX.paper(X);
+    FX.brushChar(X, t, 0, '道', W / 2, 900, { size: 640 });
+    FX.seal(X, t, 1.6, { x: 740, y: 1220, num: '道', title: '', i: 0, n: 0, size: 96 });
+    FX.blurIn(X, t, 2, '道 可 道 ， 非 常 道', W / 2, 1600, { size: 50, color: '#2a2622', from: '#e9dfc9' });
+  }],
+];
+const STARTS = []; let acc = 0; SEGS.forEach(s => { STARTS.push(acc); acc += s[2]; });
+window.VIDEO = { w: W, h: H, duration: acc };
+window.seek = t => {
+  let i = SEGS.length - 1; while (i > 0 && t < STARTS[i]) i--;
+  const [name, cn, , fn] = SEGS[i], lt = t - STARTS[i];
+  X.save(); X.fillStyle = '#000'; X.fillRect(0, 0, W, H); X.restore();
+  X.save(); fn(lt); X.restore();
+  const light = i >= 2, col = light ? '#2a2622' : C.cream;
+  FX.text(X, `MAP·INK ${String(i + 1).padStart(2, '0')} / ${SEGS.length}`, 70, 120, 24, light ? '#B8322A' : C.gold, { font: FX.MONO, weight: 600, align: 'left', spacing: 3 });
+  FX.text(X, cn, 70, 160, 30, col, { font: FX.SANS, weight: 600, align: 'left' });
+  FX.text(X, `${name}()`, 70, 196, 22, light ? '#6b6257' : C.dim, { font: FX.MONO, weight: 500, align: 'left' });
+};
+</script>
+<script src="play.js"></script></body></html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FX 特效库演示</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script src="fx.js"></script>
+<script>
+// fx.js 每个特效一段，逐段演示。window.seek(t) 是 t 的纯函数，渲染脚本逐帧调用
+const X = document.getElementById('c').getContext('2d'), W = 1080, H = 1920;
+const { C, E, seg, lerp } = FX;
+
+const SEGS = [
+  ['goldTitle', '鎏金标题', 4, t => {
+    FX.goldTitle(X, t, .3, '特效库', W / 2, 980, { size: 190, latin: 'AVATAR · FX · LIBRARY', sub: '暗场 · 鎏金 · 宋体' });
+  }],
+  ['blurIn', '模糊浮现', 3.5, t => {
+    FX.blurIn(X, t, .3, '这是大多数人心里，', W / 2, 860, { size: 58 });
+    FX.blurIn(X, t, 1.1, '理想的人生。', W / 2, 960, { size: 58 });
+    FX.blurIn(X, t, 1.9, '——每一步都不能断', W / 2, 1080, { size: 40, color: C.dim });
+  }],
+  ['keyMark', '关键词点亮', 3.5, t => {
+    FX.keyMark(X, t, .5, '白天放烟，夜里放火，', '放火', 120, 860, { size: 64 });
+    FX.keyMark(X, t, 1.4, '点几把，都有规定。', '几把', 120, 960, { size: 64, keyColor: C.red });
+    FX.blurIn(X, t, 2.2, '《新唐书·兵志》', 120, 1060, { size: 26, color: C.dim, align: 'left' });
+  }],
+  ['grow + scar', '发光路径 · 伤疤印', 6, t => {
+    const trunk = [[540, 1500], [540, 1100], [540, 700]];
+    FX.grow(X, t, .2, 1.4, trunk, { alpha: t < 2.3 ? 1 : lerp(1, .25, seg(t, 2.3, 2.8)) });
+    [['18 岁', 1500], ['22 岁', 1100]].forEach(([s, y], i) => FX.blurIn(X, t, .4 + i * .5, s, 510, y + 10, { size: 30, align: 'right', color: C.dim }));
+    FX.scar(X, t, 2.3, '没上岸', 700, 960, { size: 130, t1: 4.6 });
+    [[[540, 1100], [420, 980], [300, 900]], [[540, 1100], [640, 990], [760, 940]], [[540, 1100], [520, 960], [470, 820]]].forEach((b, i) =>
+      FX.grow(X, t, 3 + i * .18, 1.1, b, { width: 3 }));
+    [['复读', 280, 880], ['去工作', 790, 930], ['学手艺', 460, 800]].forEach(([s, x, y], i) => FX.blurIn(X, t, 3.9 + i * .18, s, x, y, { size: 34 }));
+  }],
+  ['pulses + ring', '光点传信 · 抵达光环', 4.5, t => {
+    const route = [[200, 500], [330, 760], [300, 1000], [560, 1180], [820, 1400]];
+    FX.grow(X, t, .2, 1, route, { width: 2, glow: 6, head: false, alpha: .5 });
+    FX.blurIn(X, t, .2, '边境', 170, 470, { size: 34 });
+    FX.blurIn(X, t, .6, '长安', 860, 1390, { size: 40, color: C.goldHi });
+    FX.pulses(X, t, 1.2, route, { n: 3, dur: 1.6 });
+  }],
+  ['odometer + ticks', '里程表计数', 4, t => {
+    FX.odometer(X, t, .4, 2.2, 1494, 1873, W / 2, 980, { size: 210 });
+    FX.ticks(X, t, .4, 2.2, 140, 1100, 800);
+    FX.blurIn(X, t, 2.6, '1873 · 高尔顿板', W / 2, 1200, { size: 40, color: C.dim });
+  }],
+  ['slowmo + bolt', '高速摄影 HUD · 分形闪电', 5, t => {
+    const ms = lerp(0.57, 30.39, E.io(seg(t, .3, 3.2)));
+    FX.bolt(X, t, .3, { x0: 520, y0: 560, x1: 600, y1: 1560, steps: 18, stepDur: .15, seed: 11 });
+    FX.slowmo(X, t, { ms, rate: '×6 万', note: '回击', top: 200, frame: Math.round(t * 1200) });
+    FX.blurIn(X, t, 3.4, '你看到的闪电', W / 2, 1700, { size: 64 });
+  }],
+  ['galton', '高尔顿板', 7, t => {
+    FX.galton(X, t, .3, { x: 140, y: 340, w: 800, h: 1200, rows: 12, balls: 200, rate: 45 });
+    FX.blurIn(X, t, 5, '总会堆出同一个形状。', W / 2, 1680, { size: 52 });
+  }],
+  ['flow', '流场 · 水绕石', 4.5, t => {
+    FX.flow(X, t, .2, { cx: 540, cy: 900, R: 130 });
+    X.save(); X.fillStyle = '#100E0B'; X.shadowColor = '#000'; X.shadowBlur = 40; X.beginPath(); X.ellipse(540, 900, 125, 105, .3, 0, 7); X.fill(); X.restore();
+    FX.blurIn(X, t, 1.5, '水最软，', W / 2, 1600, { size: 58 });
+  }],
+  ['seal', '印章章节', 3.5, t => {
+    FX.seal(X, t, .3, { x: 120, y: 700, num: '壹', title: '无为', i: 0 });
+    FX.seal(X, t, 1.3, { x: 120, y: 900, num: '贰', title: '不争', i: 1 });
+    FX.seal(X, t, 2.3, { x: 120, y: 1100, num: '叁', title: '留白', i: 2 });
+  }],
+  ['callout', '引线标注', 4, t => {
+    X.save(); X.strokeStyle = 'rgba(227,179,94,.5)'; X.lineWidth = 2; X.setLineDash([8, 8]); X.strokeRect(330, 760, 420, 420); X.restore();
+    FX.blurIn(X, t, .1, '样片', 540, 990, { size: 60, color: C.dim });
+    FX.callout(X, t, .5, { ax: 360, ay: 800, bx: 200, by: 620, cn: '暗场', en: 'dark scene', align: 'left' });
+    FX.callout(X, t, 1.1, { ax: 730, ay: 820, bx: 880, by: 640, cn: '鎏金辉光', en: 'golden glow', align: 'right' });
+    FX.callout(X, t, 1.7, { ax: 400, ay: 1150, bx: 220, by: 1330, cn: '宋体标题', en: 'serif title', align: 'left' });
+  }],
+  ['zoomSwap', '推进穿越 · 拉远到达', 4.5, t => {
+    const word = (s, c = C.cream) => () => FX.text(X, s, 0, 40, 150, c, { weight: 800 });
+    if (t < 2.4) FX.zoomSwap(X, t, 1.2, word('一根线'), word('一张网'), { mode: 'push' });
+    else FX.zoomSwap(X, t, 2.9, word('一张网'), word('你的人生', C.goldHi), { mode: 'pull' });
+  }],
+  ['cutCurve', '同向速度切', 3.5, t => {
+    const card = (s, c) => () => { X.fillStyle = '#1C1812'; X.strokeStyle = c; X.lineWidth = 3; X.beginPath(); X.roundRect(-330, -200, 660, 400, 26); X.fill(); X.stroke(); FX.text(X, s, 0, 30, 90, C.cream, { weight: 800 }); };
+    FX.cutCurve(X, t, 1.6, card('赌局 A', '#5a4a30'), card('赌局 B', C.gold));
+  }],
+  ['waterfall', '瀑布入场', 3.5, t => {
+    FX.waterfall(X, t, .4, '断掉的，是一条路，', W / 2, 900, { size: 92, heavy: [6, 7] });
+    FX.waterfall(X, t, 1.3, '不是你的人生。', W / 2, 1040, { size: 92 });
+  }],
+  ['trail', '运动残影', 3, t => {
+    const die = tt => { const k = E.p3o(seg(tt, .2, 1.6)); X.save(); X.translate(lerp(160, 760, k), lerp(700, 1000, k) - Math.sin(k * Math.PI) * 260); X.rotate(k * 7); X.fillStyle = C.cream; X.beginPath(); X.roundRect(-70, -70, 140, 140, 22); X.fill();
+      X.fillStyle = C.red; X.beginPath(); X.arc(0, 0, 16, 0, 7); X.fill(); X.restore(); };
+    FX.trail(X, t, die, { n: 5, dt: .03 });
+    FX.blurIn(X, t, 1.8, '骰子落下之前，谁也不知道', W / 2, 1400, { size: 46 });
+  }],
+];
+const STARTS = []; let acc = 0; SEGS.forEach(s => { STARTS.push(acc); acc += s[2]; });
+window.VIDEO = { w: W, h: H, duration: acc };
+window.seek = t => {
+  let i = SEGS.length - 1; while (i > 0 && t < STARTS[i]) i--;
+  const [name, cn, , fn] = SEGS[i], lt = t - STARTS[i];
+  X.save(); X.globalAlpha = 1; X.filter = 'none'; FX.bg(X, t); X.restore();
+  X.save(); fn(lt); X.restore();
+  FX.text(X, `FX ${String(i + 1).padStart(2, '0')} / ${SEGS.length}`, 70, 120, 24, C.gold, { font: FX.MONO, weight: 600, align: 'left', spacing: 3 });
+  FX.text(X, `${cn} · ${name}()`, 70, 160, 30, C.cream, { font: FX.SANS, weight: 600, align: 'left' });
+};
+</script>
+<script src="play.js"></script></body></html>

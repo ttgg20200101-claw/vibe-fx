@@ -1,0 +1,80 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>FX 真实地图与运镜演示</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style></head>
+<body><canvas id="c" width="1080" height="1920"></canvas>
+<script src="fx.js"></script>
+<script src="fx-cam.js"></script>
+<script src="fx-map.js"></script>
+<script src="geo/china_provinces.js"></script>
+<script src="geo/world_countries_110m.js"></script>
+<script src="fx-geo.js"></script>
+<script>
+// fx-geo.js（真实地理边界）+ fx-cam.js 新增的两种运镜。window.seek(t) 是 t 的纯函数
+const X = document.getElementById('c').getContext('2d'), W = 1080, H = 1920;
+const { C, E, seg, lerp } = FX;
+const CN = { data: 'china', proj: FX.albers(), box: { x: 60, y: 330, w: 960, h: 1250 } };
+const WD = { data: 'world', proj: FX.naturalEarth({ lon0: 0 }), box: { x: -1052, y: 500, w: 3880, h: 2000 } };   // 中心经度保持 0，避免跨日期变更线的国家被拉成横线；靠 box 平移把大西洋放到画面中间
+const at = (o, lon, lat) => FX.geoXY(o.data, o.proj, o.box, lon, lat);
+
+const SEGS = [
+  ['geoMap(china) + geoXY + pulses', '真实中国地图 · 高亮省份 · 凉州到长安 · 推近', 7, t => {
+    FX.bg(X, t, { bokeh: 6 });
+    if (!window.GEO_CHINA) {   // 仓库不附带中国省界数据，见 README「真实地图」
+      FX.text(X, '这一段需要中国省界数据', W / 2, 900, 46, C.cream);
+      FX.text(X, '按 README 下载并运行 node geo/convert-china.mjs', W / 2, 980, 30, C.dim, { font: FX.SANS });
+      return;
+    }
+    const xa = at(CN, 108.94, 34.34), cam = FX.camKeys(t, [[0, { x: 540, y: 955, zoom: 1 }], [3.6, { x: 540, y: 955, zoom: 1 }], [5.6, { x: xa[0] - 60, y: xa[1] - 60, zoom: 2.6 }]]);
+    X.save(); FX.applyCam(X, cam);
+    FX.geoMap(X, t, .2, { ...CN, lineWidth: 1.6 / cam.zoom, highlight: { '甘肃省': ['rgba(227,179,94,.35)', 1.8], '陕西省': ['rgba(227,179,94,.55)', 2.1] } });
+    const route = [[102.64, 37.93], [103.83, 36.06], [105.72, 34.58], [107.24, 34.36], [108.94, 34.34]].map(([a, b]) => at(CN, a, b));
+    FX.grow(X, t, 2.4, 1.2, route, { width: 2.2 / cam.zoom * 1.6, glow: 6, head: false, alpha: .7 });
+    FX.pulses(X, t, 3.4, route, { n: 3, gap: .2, dur: 2, tail: 40 });
+    X.restore();
+    FX.blurIn(X, t, .4, '这是一张真实边界的地图', W / 2, 1720, { size: 46, t1: 2.9 });
+    FX.keyMark(X, t, 3.6, '一把火，从凉州传到长安', '长安', W / 2, 1720, { size: 52, align: 'center', keyColor: C.goldHi });
+  }],
+  ['geoMap(world)', '世界地图（只看大西洋两岸）· 纽约到伦敦', 5, t => {
+    X.fillStyle = '#070b12'; X.fillRect(0, 0, W, H);
+    FX.geoMap(X, t, .1, { ...WD, stroke: 'rgba(140,190,255,.75)', fill: 'rgba(120,170,255,.08)', lineWidth: 1.4, cx: 540, cy: 960, reveal: 1.4, highlight: { '美国': ['rgba(120,170,255,.35)', 1.4], '英国': ['rgba(120,170,255,.6)', 1.6] } });
+    const ny = at(WD, -74, 40.7), ld = at(WD, -.13, 51.5), mid = [(ny[0] + ld[0]) / 2, Math.min(ny[1], ld[1]) - 260];
+    FX.grow(X, t, 1.8, 1.4, [ny, mid, ld], { width: 3, color: '#9CC8FF', glow: 10 });
+    FX.text(X, '纽约', ny[0] - 14, ny[1] + 10, 34, '#DDE8FF', { font: FX.SANS, align: 'right', alpha: E.p3o(seg(t, 1.6, 2)) });
+    FX.text(X, '伦敦', ld[0] + 14, ld[1] + 10, 34, '#DDE8FF', { font: FX.SANS, align: 'left', alpha: E.p3o(seg(t, 3.1, 3.5)) });
+    FX.ring(X, t, 3.2, ld[0], ld[1], { color: '#9CC8FF', r1: 110 });
+    FX.grainAndVignette(X, t);
+  }],
+  ['skyAt + ridgeLayer + walker', '横移视差一镜到底：黎明 → 正午 → 黄昏', 8, t => {
+    const camX = 4200 * E.io(seg(t, 0, 8)) + t * 40;
+    FX.skyAt(X, camX, [[0, '#2B3354', '#D9927A'], [2000, '#7FA6C9', '#EADBC4'], [4400, '#3A2440', '#E07A4F']]);
+    const sun = FX.mix('#FFE3B0', '#FFB070', camX / 4400);
+    X.fillStyle = sun; X.beginPath(); X.arc(760 - camX * .05, lerp(760, 520, Math.sin(camX / 4400 * Math.PI)), 80, 0, 7); X.fill();
+    [[.05, 1050, 220, '#7d7088', 11], [.3, 1220, 240, '#4d4152', 12], [.6, 1400, 220, '#2a2230', 13], [1, 1560, 160, '#120e12', 14]].forEach(([d, b, a, col, s], i) => {
+      FX.ridgeLayer(X, camX, { depth: d, base: b, amp: a, color: col, seed: s, period: 1500 + i * 300 });
+      if (i === 2) FX.walker(X, 540, 1560, t, { h: 230 });
+    });
+    [['黎明', .4], ['正午', 3.2], ['黄昏', 6]].forEach(([s, t0]) => FX.blurIn(X, t, t0, s, W / 2, 430, { size: 76, color: '#FFF6E6', t1: t0 + 2.2 }));
+  }],
+  ['corridor + camKeys(3D)', '3D 档案长廊：一路推进 → 升起俯拍桌面', 8, t => {
+    X.fillStyle = '#0a0a0c'; X.fillRect(0, 0, W, H);
+    const len = 36;
+    const cam = FX.camKeys(t, [[0, { tz: -1.5, ty: .1, pitch: 0 }], [5.4, { tz: len - 2.6, ty: .1, pitch: -.12 }], [7.4, { tz: len + 1.45, ty: 1.4, pitch: -1.5 }]]);
+    FX.corridor(X, { ...cam, tx: 0, yaw: Math.sin(t * .3) * .02, dist: .0001, fov: 720, cx: 540, cy: 960 }, { len });
+    FX.grainAndVignette(X, t);
+    FX.blurIn(X, t, .6, '每一格，都是一个人', W / 2, 1660, { size: 54, color: '#F2EBDD', t1: 4.6 });
+    FX.blurIn(X, t, 6.6, '轮到你了', W / 2, 1660, { size: 64, color: '#F2EBDD' });
+  }],
+];
+const STARTS = []; let acc = 0; SEGS.forEach(s => { STARTS.push(acc); acc += s[2]; });
+window.VIDEO = { w: W, h: H, duration: acc };
+window.seek = t => {
+  let i = SEGS.length - 1; while (i > 0 && t < STARTS[i]) i--;
+  const [name, cn, , fn] = SEGS[i], lt = t - STARTS[i];
+  X.save(); X.fillStyle = '#000'; X.fillRect(0, 0, W, H); X.restore();
+  X.save(); fn(lt); X.restore();
+  FX.text(X, `GEO·CAM ${String(i + 1).padStart(2, '0')} / ${SEGS.length}`, 70, 120, 24, C.gold, { font: FX.MONO, weight: 600, align: 'left', spacing: 3 });
+  FX.text(X, cn, 70, 160, 30, C.cream, { font: FX.SANS, weight: 600, align: 'left' });
+  FX.text(X, `${name}()`, 70, 196, 22, C.dim, { font: FX.MONO, weight: 500, align: 'left' });
+};
+</script>
+<script src="play.js"></script></body></html>
