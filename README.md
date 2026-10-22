@@ -157,7 +157,7 @@ heygen-com/hyperframes、jincheng2026/jc-remotion-skills、charlie947/motion-gra
 
 Bowen · 20 年产品人，亲手用 AI 解决 100 个真实问题 · AI 实战 100 例
 
-视频号 / 抖音：待补
+抖音号：1083328779
 
 ## License
 
