@@ -1,5 +1,7 @@
 # vibe-fx
 
+**中文** | [English](README.en.md)
+
 让 AI 写代码做动效视频时直接调用的 Canvas 特效库：17 个特效、镜头与 3D、地形晕渲、水墨、真实地图。纯 JavaScript，零依赖，竖屏 1080×1920。
 
 手法来自两处：抖音「Vibe 知识大赏」高赞片的逐帧拆解，和 GitHub 上 9 个高星动效技能。**只学手法，不搬素材**：文案、字体、音乐、画面都没有复制，代码是重新写的。
@@ -178,6 +180,10 @@ heygen-com/hyperframes、jincheng2026/jc-remotion-skills、charlie947/motion-gra
 Bowen · 20 年产品人，亲手用 AI 解决 100 个真实问题 · AI 实战 100 例
 
 抖音：[Bowen的AI实战笔记](https://www.douyin.com/user/MS4wLjABAAAAsVy4x0FpjE8j4epQQZtZkg2OOU2Vb3G5UweYp5ZZwd0)（抖音号 1083328779）
+
+其他开源项目：
+- [meeting-minutes](https://github.com/ttgg20200101-claw/meeting-minutes)：跟 AI 说「开会」就录音，说「结束」就出会议纪要并核实事实说法
+- [workbuddy-bridge](https://github.com/ttgg20200101-claw/workbuddy-bridge)：让 AI 当监工、WorkBuddy 当员工
 
 ## License
 
