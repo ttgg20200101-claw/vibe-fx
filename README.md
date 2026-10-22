@@ -6,6 +6,25 @@
 
 ## 效果预览
 
+<table>
+<tr>
+<td><img src="preview/fx.gif" width="200" alt="鎏金标题、伤疤印、分形闪电"></td>
+<td><img src="preview/cam.gif" width="200" alt="粒子人合体、星空跃迁"></td>
+<td><img src="preview/ink.gif" width="200" alt="水墨远山、书法大字"></td>
+<td><img src="preview/geo.gif" width="200" alt="横移视差、3D 档案长廊"></td>
+</tr>
+<tr>
+<td align="center">特效：标题 · 伤疤印 · 闪电</td>
+<td align="center">镜头与 3D：粒子 · 跃迁</td>
+<td align="center">水墨：远山 · 书法</td>
+<td align="center">运镜：视差 · 3D 长廊</td>
+</tr>
+</table>
+
+fx.js 全部特效一览（15 段演示，覆盖 17 个特效）：
+
+![fx.js 全部特效](preview/all-effects.jpg)
+
 | 演示 | 内容 | 视频 |
 |---|---|---|
 | `demo.html` | fx.js 的特效，15 段逐个演示（64 秒） | 待补：视频号 / 抖音链接 |
@@ -51,6 +70,7 @@ function draw(t) {                       // t = 当前秒
 | `geo/convert-china.mjs` | 把 DataV 的中国省界数据转成 `geo/china_provinces.js`（数据不随仓库附带，见下文） |
 | `play.js` | 演示页的播放条 |
 | `demo*.html` | 四个演示页 |
+| `preview/` | README 里的预览动图和全家福截图 |
 
 ## 特效图鉴（fx.js）
 
