@@ -27,7 +27,7 @@ fx.js 全部特效一览（15 段演示，覆盖 17 个特效）：
 
 | 演示 | 内容 | 视频 |
 |---|---|---|
-| `demo.html` | fx.js 的特效，15 段逐个演示（64 秒） | 待补：视频号 / 抖音链接 |
+| `demo.html` | fx.js 的特效，15 段逐个演示（64 秒） | 待补 |
 | `demo-cam.html` | 镜头与 3D：跟拍、画中画推拉、分屏、调色、点云重组、星空跃迁（41 秒） | 待补 |
 | `demo-map-ink.html` | 地形晕渲地图 + 水墨（26.5 秒） | 待补 |
 | `demo-geo-cam.html` | 真实地图、横移视差一镜到底、3D 档案长廊推进（28 秒） | 待补 |
@@ -177,7 +177,7 @@ heygen-com/hyperframes、jincheng2026/jc-remotion-skills、charlie947/motion-gra
 
 Bowen · 20 年产品人，亲手用 AI 解决 100 个真实问题 · AI 实战 100 例
 
-抖音号：1083328779
+抖音：[Bowen的AI实战笔记](https://www.douyin.com/user/MS4wLjABAAAAsVy4x0FpjE8j4epQQZtZkg2OOU2Vb3G5UweYp5ZZwd0)（抖音号 1083328779）
 
 ## License
 
