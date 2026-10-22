@@ -8,10 +8,10 @@
 
 <table>
 <tr>
-<td><img src="preview/fx.gif" width="200" alt="鎏金标题、伤疤印、分形闪电"></td>
-<td><img src="preview/cam.gif" width="200" alt="粒子人合体、星空跃迁"></td>
-<td><img src="preview/ink.gif" width="200" alt="水墨远山、书法大字"></td>
-<td><img src="preview/geo.gif" width="200" alt="横移视差、3D 档案长廊"></td>
+<td><img src="preview/fx.gif" width="180" alt="鎏金标题、伤疤印、分形闪电"></td>
+<td><img src="preview/cam.gif" width="180" alt="粒子人合体、星空跃迁"></td>
+<td><img src="preview/ink.gif" width="180" alt="水墨远山、书法大字"></td>
+<td><img src="preview/geo.gif" width="180" alt="横移视差、3D 档案长廊"></td>
 </tr>
 <tr>
 <td align="center">特效：标题 · 伤疤印 · 闪电</td>
